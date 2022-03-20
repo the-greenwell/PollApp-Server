@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
 
 const optionSchema = new mongoose.Schema({
-  option: String,
-  votes: Number
+  description: String,
+  votes: { type: Number, default: 0 },
 })
 
 const pollSchema = new mongoose.Schema({
@@ -10,8 +10,11 @@ const pollSchema = new mongoose.Schema({
   author: String,
   password: String,
   expires: Date,
-  format: String,
-  options: [optionSchema]
+  format: { type: String, default: 'default' },
+  options: [optionSchema],
 }, {timestamps: true});
 
-module.exports = Poll = mongoose.model('Poll',  pollSchema);
+module.exports = {
+  Poll: mongoose.model('Poll',  pollSchema),
+  Option: mongoose.model('Option', optionSchema),
+}

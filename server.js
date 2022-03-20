@@ -14,9 +14,13 @@ const { connectDB, verifyToken } = require('./config.js')
 
 connectDB();
 
+const pollRoutes = require('./routes.js');
+
 app.get('/', (req,res) => {
   res.status(200).send('<h1>Hello World!</h1>')
 })
+
+app.use('/poll', pollRoutes);
 
 const PORT = 3001;
 app.listen(PORT, () => {
