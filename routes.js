@@ -19,8 +19,7 @@ const Voter = require('./Models/Voter');
 
 router.post('/newpoll',
     body('subject').isString().notEmpty().escape().trim(),
-    body('author').isString().notEmpty().escape().trim().toUpperCase(),
-    body('password').isString().notEmpty(),
+    body('password').isString().optional(),
     body('format').isString().optional().isIn(['default','bar','pie','radar']),
     body('options').isArray({ min:2 }),
     body('options.*.description').isString().notEmpty().trim(),
@@ -31,7 +30,10 @@ router.post('/newpoll',
       }
 
       const pollBody = req.body;
-      pollBody.password = await bcrypt.hash(req.body.password, 10);
+
+      if(req.body.password){
+        pollBody.password = await bcrypt.hash(req.body.password, 10);
+      }
 
       const dbPoll = new Poll(pollBody);
       dbPoll.save()
@@ -44,9 +46,12 @@ router.post('/newpoll',
   }
 )
 router.get('/:id',
-  async (req,res) => {
-      const poll = await Poll.findById(req.params.id, {password:0}).populate('options');
-      return res.status(200).json({poll:poll})
+  (req,res) => {
+      Poll.findById(req.params.id, {password:0}).populate('options').then((poll)=>{
+        return res.status(200).json({poll:poll})
+      }).catch((err)=>{
+        return res.status(400).json({err:err})
+      });
   }
 )
 router.put('/:id',
@@ -89,7 +94,7 @@ router.post('/:id/login',
     })
   }
 )
-router.patch('/:id/:option',
+router.patch('/:id/:optionId',
   async (req,res) => {
     // const ipAddress = ipInt(req.ip).toInt();
     // const alreadyVoted = await Voter.find({poll: req.params.id,ipAddress: ipAddress}).exec();
@@ -99,7 +104,7 @@ router.patch('/:id/:option',
     Poll.findOneAndUpdate(
         {
           '_id': req.params.id,
-          'options': { '$elemMatch': { 'description': req.params.option } }
+          'options': { '$elemMatch': { '_id': req.params.optionId } }
         },{
           '$inc': {
             'options.$.votes': 1
@@ -112,7 +117,7 @@ router.patch('/:id/:option',
         //   .catch((err)=>{
         //     res.status(400).json({ err: err })
         //   });
-        return res.status(200).json({poll:poll});
+        return res.status(200).json({updatedOptions:poll.options});
       })
   }
 )

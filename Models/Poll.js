@@ -7,7 +7,6 @@ const optionSchema = new mongoose.Schema({
 
 const pollSchema = new mongoose.Schema({
   subject: String,
-  author: String,
   password: String,
   expires: Date,
   format: { type: String, default: 'default' },
